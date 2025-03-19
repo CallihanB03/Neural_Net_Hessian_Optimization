@@ -1,7 +1,6 @@
 from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 from sklearn.datasets import fetch_california_housing
-import numpy as np
 import pandas as pd
 
 
