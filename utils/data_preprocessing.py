@@ -1,12 +1,6 @@
 from torch.utils.data import DataLoader
-from load_data import load_digits
 
-def create_digits_loader(training=True, batch_size=64, shuffle=True):
-    if training:
-        data, _ = load_digits()
-    else:
-        _, data = load_digits()
-
+def create_digits_loader(data, batch_size=64, shuffle=True):
     return DataLoader(data, batch_size=batch_size, shuffle=shuffle)
 
 
@@ -15,7 +9,7 @@ class HousingDataLoader():
         self.ind = 0
 
         if shuffle:
-            self.data = data.shuffle(frac=1)
+            self.data = data.sample(frac=1)
         else:
             self.data = data
 
@@ -34,9 +28,23 @@ class HousingDataLoader():
     
 
 
-def create_housing_data_loader(training=True, batch_size=64, shuffle=True):
-    pass
+def create_housing_data_loader(data, batch_size=64, shuffle=True):
+    data_loader = HousingDataLoader(data, batch_size=batch_size, shuffle=shuffle)
+    return data_loader
 
 
 if __name__ == "__main__":
-    pass
+    from load_data import *
+
+    housing_train_data, housing_test_data = load_housing_data()
+
+    housing_traind_data_loader = create_housing_data_loader(housing_train_data)
+
+    while True:
+        try: 
+            housing_training_batch = next(housing_traind_data_loader)
+        
+        except StopIteration:
+            break
+
+    print("Iterated through all batches")
