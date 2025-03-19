@@ -12,6 +12,7 @@ where $\mathcal{L}(\theta_{i})$ is the loss function evaluated for the set of pa
 
 
 In this project, I explore the use of Hessian methods to speed up the training of neural networks. Specifically, I seek to define the gradient update as the following
+
 $$
 \theta_{i+1} = \theta_{i} - H^{-1}\nabla\mathcal{L}(\theta_{i})
 $$
