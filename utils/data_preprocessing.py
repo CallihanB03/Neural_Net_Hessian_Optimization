@@ -5,8 +5,9 @@ def create_digits_loader(data, batch_size=64, shuffle=True):
 
 
 class HousingDataLoader():
-    def __init__(self, data, batch_size, shuffle):
+    def __init__(self, data, target, batch_size, shuffle):
         self.ind = 0
+        self.target = [target]
 
         if shuffle:
             self.data = data.sample(frac=1)
@@ -24,12 +25,16 @@ class HousingDataLoader():
         
         df = self.data[self.ind: self.ind+self.batch_size]
         self.ind += self.batch_size
-        return df
+
+        train_cols = df.columns.difference(self.target)
+        X, y = df[train_cols], df[self.target]
+
+        return X, y
     
 
 
-def create_housing_data_loader(data, batch_size=64, shuffle=True):
-    data_loader = HousingDataLoader(data, batch_size=batch_size, shuffle=shuffle)
+def create_housing_data_loader(data, target, batch_size=64, shuffle=True):
+    data_loader = HousingDataLoader(data, target=target, batch_size=batch_size, shuffle=shuffle)
     return data_loader
 
 
@@ -38,11 +43,15 @@ if __name__ == "__main__":
 
     housing_train_data, housing_test_data = load_housing_data()
 
-    housing_traind_data_loader = create_housing_data_loader(housing_train_data)
+    housing_traind_data_loader = create_housing_data_loader(housing_train_data, "median_house_value")
 
+    show = True
     while True:
         try: 
-            housing_training_batch = next(housing_traind_data_loader)
+            X, y = next(housing_traind_data_loader)
+            if show:
+                print(X, y)
+                show = False
         
         except StopIteration:
             break
