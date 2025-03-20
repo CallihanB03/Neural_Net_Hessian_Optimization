@@ -1,3 +1,4 @@
+from torch import from_numpy
 from torch.utils.data import DataLoader
 
 def create_digits_loader(data, batch_size=64, shuffle=True):
@@ -29,7 +30,7 @@ class HousingDataLoader():
         train_cols = df.columns.difference(self.target)
         X, y = df[train_cols], df[self.target]
 
-        return X, y
+        return from_numpy(X.values), from_numpy(y.values)
     
 
 
