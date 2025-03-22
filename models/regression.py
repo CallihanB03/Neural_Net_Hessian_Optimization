@@ -1,7 +1,9 @@
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from utils.data_preprocessing import create_housing_data_loader
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class RegressionModel(nn.Module):
@@ -58,6 +60,18 @@ def train_model(train_data, target, model, loss, optimizer, batch_size=64, error
         
         prev_epoch_loss = curr_epoch_loss
         epoch += 1
+
+def evaluate_model(test_data, target, model, loss):
+    eval_cols = test_data.columns.difference([target])
+    X_test, y_test = torch.from_numpy(test_data[eval_cols].values).to(torch.float32), torch.from_numpy(test_data[target].values).to(torch.float32)
+
+    y_pred = model(X_test)
+    test_loss = loss(y_test, y_pred.flatten())
+    return test_loss
+
+
+
+
         
 
 
@@ -81,3 +95,12 @@ if __name__ == "__main__":
 
 
     model1, losses = train_model(train_data=train_data, target="median_house_value", model=model1, loss=mse_loss, optimizer=adam_optimizer)
+
+    # plt.plot(np.arange(1, len(losses)+1), losses)
+    # plt.xlabel("Iterations")
+    # plt.ylabel("Losses")
+    # plt.show()
+    # plt.close()
+
+    test_loss = evaluate_model(test_data=testing_data, target="median_house_value", model=model1, loss=mse_loss)
+    print(f"Model Test Loss: {test_loss:.4f}")
