@@ -1,9 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
 
-def create_digits_loader(data, batch_size=64, shuffle=True):
-    return DataLoader(data, batch_size=batch_size, shuffle=shuffle)
-
 
 class HousingDataLoader():
     def __init__(self, data, target, batch_size, shuffle):
