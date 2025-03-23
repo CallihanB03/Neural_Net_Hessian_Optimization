@@ -1,4 +1,4 @@
-from torchvision.datasets import MNIST
+from torchvision.datasets import MNIST, FashionMNIST
 from torchvision.transforms import transforms
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
@@ -24,6 +24,21 @@ def load_digits():
     
     return train_data, test_data
 
+
+def load_fashion():
+    train_data = FashionMNIST(root="~/Academics/Projects/data",
+                              download=True,
+                              train=True,
+                              transform=transform
+                              )
+    test_data = FashionMNIST(root="~/Academics/Projects/data",
+                              download=True,
+                              train=False,
+                              transform=transform
+                              )
+    return train_data, test_data
+
+
 def load_housing_data():
     # Create df
     data_bunch = fetch_california_housing()
@@ -42,9 +57,8 @@ def load_housing_data():
     return train_data, test_data
 
 
-def load_fash():
 
 
 
 if __name__ == "__main__":
-    pass
+    fashion_train, fashion_test = load_fashion()
