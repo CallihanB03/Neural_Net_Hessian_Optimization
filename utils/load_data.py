@@ -4,6 +4,9 @@ from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
+transform = transforms.Compose([transforms.ToTensor(),
+                                transforms.Normalize((0.5), (0.5))]
+                                )
 
 
 def load_digits():
@@ -37,6 +40,10 @@ def load_housing_data():
     train_data = pd.concat([X_train, y_train], axis=1)
     test_data = pd.concat([X_test, y_test], axis=1)
     return train_data, test_data
+
+
+def load_fash():
+
 
 
 if __name__ == "__main__":
