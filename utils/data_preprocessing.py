@@ -118,4 +118,7 @@ if __name__ == "__main__":
     print(type(val_loader))
     print(type(test_loader))
 
+    train_batch = next(iter(train_loader))
+    print(f"Training shape = {train_batch[0].shape}")
+
     show_clothing(dataloader=train_loader, ind=0)
