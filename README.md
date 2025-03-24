@@ -32,9 +32,11 @@ A positive definite Hessian at a stationary point on the loss surface indicates 
 
 #### 3. Ill-Conditioned Hessians
 The condition number of the Hessian matrix, $H$, is defined as 
+
 $$
 \kappa(H) = \frac{\lambda_{max}}{\lambda_{min}}
 $$
+
 where $\lambda_{max}$ and $\lambda_{min}$ are the largest and smallest eigenvalues of $H$. A high $\kappa(H)$ implies that:
 
 * The loss surface has highly elongated and narrow contours (poor curvature)
@@ -47,13 +49,16 @@ In general, a Hessian matrix with a high condition number will result in slow co
 
 ## Methods
 To address the computational expense of computing the Hessian inverse $\mathcal{O}(n^{3})$, we consider Quasi Newton optimization algorithms to approximate $H^{-1}$. More specifically, we consider the [Broyden-Fletcher-Goldfarb-Shanno (BFGS)](https://en.wikipedia.org/wiki/Broyden–Fletcher–Goldfarb–Shanno_algorithm) and [Limited-memory BFGS](https://en.wikipedia.org/wiki/Limited-memory_BFGS) algorithms. These Quasi Newton algorithms work by approximating the Hessian matrix at every iteration. To briefly describe BFGS, consider $\mathcal{L}: \mathbb{R}^{n} \rightarrow \mathbb{R}$ to be the model's loss function, where $n$ is the number of parameters in the model, and $\mathcal{L}(\theta_{i})$ to be the model's loss at iteration $i$. Let $\mathcal{G}$ to be the second order approximation of $\mathcal{L}$ such that
+
 $$
 \mathcal{G}(\theta_{i}) \approx \mathcal{L}(\theta_{i}) + (\theta - \theta_{i})^{\intercal} \nabla \mathcal{L}(\theta_{i}) + \frac{1}{2}(\theta - \theta_{i})^{2}B_{i}\mathcal{L}(\theta_{i}) + \mathcal{O}((\theta - \theta_{i})^{3})
 $$
+
 where $B_{i}$ is an approximation of the Hessian matrix at iteration $i$. Then at iteration $i+1$, we seek to find a $B_{i+1}$ matrix such that $B_{i+1}$ abides by the following constraints: 
 
 #### Constraint: B^{-1} is symmetric
 To accurately approximate the Hessian, we penalize $B_{i+1}^{-1}$ for non-symmetry. This is because the Hessian matrix is a symmetric matrix.
+
 $$
 \begin{bmatrix}
 \frac{\partial^{2}\mathcal{L}}{\partial^{2} \theta_{1}^{(i)}} & \dots & \dots & \frac{\partial^{2}\mathcal{L}}{\partial \theta_{1}^{(i)} \partial \theta_{n}^{(i)}}\\
