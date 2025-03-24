@@ -4,6 +4,7 @@ from torchsummary import summary
 import torch.optim as optim
 from utils.load_data import load_fashion
 from utils.data_preprocessing import create_fashion_dataloaders
+from utils.create_plots import plot_training_and_validation_loss
 
 class Simple_classifier(nn.Module):
     def __init__(self, input_dim, 
@@ -148,7 +149,7 @@ def train_simple_classifier(model, loss_fn, optimizer, error, train_loader, val_
                 else:
                     val_epoch_loss = val_epoch_loss / len(val_loader)
                     val_epoch_acc = val_epoch_acc / len(val_loader)
-                    train_losses.append(train_epoch_loss)
+                    train_losses.append(train_epoch_loss.item())
                     val_losses.append(val_epoch_loss)
 
                     print(f"Epoch: {epoch} -> train_loss: {train_epoch_loss:.6f}, val_loss = {val_epoch_loss:.6f}, val_acc: {val_epoch_acc*100:.4f}%")
@@ -186,6 +187,7 @@ def evaluate_simple_classifier(model, loss_fn, test_loader):
             test_acc = test_acc / len(test_loader)
 
             print(f"test_loss: {test_loss:.6f}, test_acc: {test_acc * 100:.4f}")
+    return round(test_loss, 6)
 
 
             
@@ -231,11 +233,21 @@ if __name__ == "__main__":
         device=device
     )
 
-    evaluate_simple_classifier(
+    test_loss = evaluate_simple_classifier(
         model=simple_classifier,
         loss_fn=loss_fn,
         test_loader=test_loader
     )
+
+    plot_training_and_validation_loss(
+        train_losses=train_losses,
+        val_losses=val_losses,
+        y_label="Negative Log Likelihood",
+        show=False,
+        save=True,
+        relative_save_path="/figures/simple_classifier_test_loss_{test_loss}.png"
+    )
+
 
 
     # simple_classifier_summary = summary(simple_classifier, (64, 784))
