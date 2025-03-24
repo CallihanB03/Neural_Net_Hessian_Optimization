@@ -161,6 +161,37 @@ def train_simple_classifier(model, loss_fn, optimizer, error, train_loader, val_
         prev_epoch_loss = train_epoch_loss
 
 
+def evaluate_simple_classifier(model, loss_fn, test_loader):
+    with torch.no_grad():
+        test_loss = 0
+        test_acc = 0
+        model.eval()
+
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            images = images.view(images.shape[0], -1)
+            test_preds = model(images)
+            test_batch_loss = loss_fn(test_preds, labels)
+            test_loss += test_batch_loss.item()
+
+            proba = torch.exp(test_preds)
+            _, pred_labels = proba.topk(1, dim=1)
+
+            result = pred_labels == labels.view(pred_labels.shape)
+            batch_acc = torch.mean(result.type(torch.FloatTensor))
+            test_acc += batch_acc.item()
+        
+        else:
+            test_loss = test_loss / len(test_loader)
+            test_acc = test_acc / len(test_loader)
+
+            print(f"test_loss: {test_loss:.6f}, test_acc: {test_acc * 100:.4f}")
+
+
+            
+
+
+
 
 if __name__ == "__main__":
     # Fashion MNIST Dataset
@@ -198,6 +229,12 @@ if __name__ == "__main__":
         train_loader=train_loader,
         val_loader=val_loader,
         device=device
+    )
+
+    evaluate_simple_classifier(
+        model=simple_classifier,
+        loss_fn=loss_fn,
+        test_loader=test_loader
     )
 
 
