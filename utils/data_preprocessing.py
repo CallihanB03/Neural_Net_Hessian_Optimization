@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader, sampler
 import numpy as np
 import matplotlib.pyplot as plt
-from create_plots import show_clothing
+from utils.create_plots import show_clothing
 
 
 class HousingDataLoader():
