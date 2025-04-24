@@ -65,7 +65,7 @@ def train_simple_classifier(model, loss_fn, optimizer, error, train_loader, val_
         prev_epoch_loss = train_epoch_loss
 
 
-def evaluate_simple_classifier(model, loss_fn, test_loader):
+def evaluate_simple_classifier(model, loss_fn, test_loader, device):
     with torch.no_grad():
         test_loss = 0
         test_acc = 0
@@ -130,7 +130,7 @@ if __name__ == "__main__":
         model=simple_classifier,
         loss_fn=loss_fn,
         optimizer=optimizer,
-        error=10e-6,
+        error=1e-5,
         train_loader=train_loader,
         val_loader=val_loader,
         device=device
@@ -139,7 +139,8 @@ if __name__ == "__main__":
     test_loss = evaluate_simple_classifier(
         model=simple_classifier,
         loss_fn=loss_fn,
-        test_loader=test_loader
+        test_loader=test_loader,
+        device=device
     )
 
     plot_training_and_validation_loss(
@@ -148,5 +149,5 @@ if __name__ == "__main__":
         y_label="Negative Log Likelihood",
         show=False,
         save=True,
-        relative_save_path=f"/figures/simple_classifier_test_loss_{test_loss}.png"
+        relative_save_path=f"/figures/simple_nn/simple_classifier_test_loss_{test_loss}.png"
     )
