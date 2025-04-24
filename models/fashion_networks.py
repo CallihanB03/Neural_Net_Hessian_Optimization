@@ -104,6 +104,8 @@ class CNN_classifier(nn.Module):
         x = self.relu(self.fc2(x))
         x = self.relu(self.fc3(x))
         x = self.logsoftmax(self.fc4(x))
+        
+        return x
 
     
 def train_simple_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device):
