@@ -96,8 +96,9 @@ class CNN_classifier(nn.Module):
         x = self.dropout(x)
 
         x = self.relu(self.conv3(x))
-        x = self.flatten(x)
+        x = self.max_pool(x)
         x = self.dropout(x)
+        x = self.flatten(x)
 
 
         x = self.relu(self.fc1(x))
