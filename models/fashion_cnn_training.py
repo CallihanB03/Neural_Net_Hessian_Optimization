@@ -8,10 +8,22 @@ from models.fashion_networks import CNN_classifier
 from models.lbfgs_optimizer import RegularizedLBFGS
 import numpy as np
 import pandas as pd
+import random
 
     
+def set_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
-def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device):
+    # Ensure deterministic behavior for CUDA
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+
+def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device, max_iter=None):
     train_losses = []
     val_losses = []
     val_acc = []
@@ -38,6 +50,8 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                     train_batch_loss.backward()
                     return train_batch_loss
                 train_batch_loss = optimizer.step(closure)
+                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
+
 
             else:
                 optimizer.zero_grad()
@@ -45,7 +59,6 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                 train_preds = model(images)
                 train_batch_loss = loss_fn(train_preds, labels)
                 train_batch_loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
                 optimizer.step()
 
             train_epoch_loss += train_batch_loss.item()
@@ -85,6 +98,11 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         if abs(train_epoch_loss - prev_epoch_loss) < error:
             return model, train_losses, val_losses, val_acc, optimizer_type
         
+
+        if max_iter and epoch >= max_iter:
+            return model, train_losses, val_losses, val_acc, optimizer_type
+        
+
         epoch += 1
         prev_epoch_loss = train_epoch_loss
 
@@ -118,6 +136,7 @@ def evaluate_cnn_classifier(model, loss_fn, test_loader, device):
 
 if __name__ == "__main__":
     # Fashion MNIST Dataset
+    set_seed(42)
     train_data, test_data = load_fashion()
 
     train_loader, val_loader, test_loader = create_fashion_dataloaders(
@@ -160,7 +179,8 @@ if __name__ == "__main__":
         error=1e-5,
         train_loader=train_loader,
         val_loader=val_loader,
-        device=device
+        device=device,
+        max_iter=20
     )
 
     training_data_matrix = np.array([train_losses, val_losses, val_acc])
