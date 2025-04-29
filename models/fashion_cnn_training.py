@@ -28,6 +28,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
             optimizer.zero_grad()
             
             if isinstance(optimizer, torch.optim.LBFGS):
+                optimizer_type = "LBFGS"
                 def closure():
                     train_preds = model(images)
                     train_batch_loss = loss_fn(train_preds, labels)
@@ -36,6 +37,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                 train_batch_loss = optimizer.step(closure)
 
             else:
+                optimizer_type = "Adam"
                 train_preds = model(images)
                 train_batch_loss = loss_fn(train_preds, labels)
                 train_batch_loss.backward()
@@ -76,7 +78,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         
 
         if abs(train_epoch_loss - prev_epoch_loss) < error:
-            return model, train_losses, val_losses
+            return model, train_losses, val_losses, val_acc, optimizer_type
         
         epoch += 1
         prev_epoch_loss = train_epoch_loss
@@ -106,7 +108,7 @@ def evaluate_cnn_classifier(model, loss_fn, test_loader, device):
             test_acc = test_acc / len(test_loader)
 
             print(f"test_loss: {test_loss:.6f}, test_acc: {test_acc * 100:.4f}")
-    return round(test_loss, 6)
+    return round(test_loss, 6), round(test_acc, 6)
 
 
 if __name__ == "__main__":
@@ -144,7 +146,7 @@ if __name__ == "__main__":
 
 
 
-    cnn_classifier, train_losses, val_losses, val_acc = train_cnn_classifier(
+    cnn_classifier, train_losses, val_losses, val_acc, optimizer_type = train_cnn_classifier(
         model=cnn_classifier,
         loss_fn=loss_fn,
         optimizer=optimizer_lgfbs,
@@ -161,14 +163,17 @@ if __name__ == "__main__":
     training_df = pd.DataFrame(training_data_rotated, columns=["training loss", "validation loss", "testing loss"])
 
 
-    test_loss = evaluate_cnn_classifier(
+    test_loss, test_acc = evaluate_cnn_classifier(
         model=cnn_classifier,
         loss_fn=loss_fn,
         test_loader=test_loader,
         device=device
     )
 
-    training_df.to_csv(f"training_data/test_loss_{test_loss}.csv")
+    if optimizer_type == "LBFGS":
+        training_df.to_csv(f"training_data/LBFGS/test_loss_{test_loss}_test_acc_{test_acc}.csv")
+    else:
+        training_df.to_csv(f"training_data/Adam/test_loss_{test_loss}_test_acc_{test_acc}.csv")
 
     plot_training_and_validation_loss(
         train_losses=train_losses,
