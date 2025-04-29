@@ -28,7 +28,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
 
             images, labels = images.to(device), labels.to(device)
             
-            if isinstance(optimizer, torch.optim.LBFGS):
+            if isinstance(optimizer, optim.LBFGS):
                 optimizer_type = "LBFGS"
                 def closure():
                     model.train()
@@ -45,6 +45,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                 train_preds = model(images)
                 train_batch_loss = loss_fn(train_preds, labels)
                 train_batch_loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
                 optimizer.step()
 
             train_epoch_loss += train_batch_loss.item()
@@ -128,7 +129,7 @@ if __name__ == "__main__":
 
 
     # Input Shape 1 x 28 x 28
-
+    # Dropout rate is 0.2 for Adam
     # Dropout must be 0 for LBFGS
     cnn_classifier = CNN_classifier(
         input_dim=1,
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     loss_fn = nn.NLLLoss()
     optimizer_adam = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
-    optimizer_lgfbs = torch.optim.LBFGS(cnn_classifier.parameters(), lr=0.01, max_iter=10, history_size=10)
+    optimizer_lgfbs = optim.LBFGS(cnn_classifier.parameters(), lr=0.01, max_iter=10, history_size=10)
 
 
 
