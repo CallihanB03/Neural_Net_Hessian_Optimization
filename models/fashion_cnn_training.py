@@ -5,11 +5,16 @@ from utils.load_data import load_fashion
 from utils.data_preprocessing import create_fashion_dataloaders
 from utils.create_plots import plot_training_and_validation_loss
 from models.fashion_networks import CNN_classifier
+from models.lbfgs_optimizer import RegularizedLBFGS
+import numpy as np
+import pandas as pd
+
     
 
 def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device):
     train_losses = []
     val_losses = []
+    val_acc = []
     prev_epoch_loss = float("inf")
     epoch = 1
 
@@ -20,11 +25,22 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         for images, labels in train_loader:
 
             images, labels = images.to(device), labels.to(device)
-            train_preds = model(images)
-            train_batch_loss = loss_fn(train_preds, labels)
             optimizer.zero_grad()
-            train_batch_loss.backward()
-            optimizer.step()
+            
+            if isinstance(optimizer, torch.optim.LBFGS):
+                def closure():
+                    train_preds = model(images)
+                    train_batch_loss = loss_fn(train_preds, labels)
+                    train_batch_loss.backward()
+                    return train_batch_loss
+                train_batch_loss = optimizer.step(closure)
+
+            else:
+                train_preds = model(images)
+                train_batch_loss = loss_fn(train_preds, labels)
+                train_batch_loss.backward()
+                optimizer.step()
+
             train_epoch_loss += train_batch_loss.item()
 
         else:
@@ -54,6 +70,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                     val_epoch_acc = val_epoch_acc / len(val_loader)
                     train_losses.append(train_epoch_loss.item())
                     val_losses.append(val_epoch_loss)
+                    val_acc.append(val_epoch_acc*100)
 
                     print(f"Epoch: {epoch} -> train_loss: {train_epoch_loss:.6f}, val_loss = {val_epoch_loss:.6f}, val_acc: {val_epoch_acc*100:.4f}%")
         
@@ -103,6 +120,7 @@ if __name__ == "__main__":
       batch_size=64  
     )
 
+
     # Input Shape 1 x 28 x 28
     cnn_classifier = CNN_classifier(
         input_dim=1,
@@ -121,18 +139,26 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     loss_fn = nn.NLLLoss()
-    optimizer = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
+    optimizer_adam = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
+    optimizer_lgfbs = torch.optim.LBFGS(cnn_classifier.parameters(), lr=1.0, max_iter=10, history_size=10)
 
 
-    cnn_classifier, train_losses, val_losses = train_cnn_classifier(
+
+    cnn_classifier, train_losses, val_losses, val_acc = train_cnn_classifier(
         model=cnn_classifier,
         loss_fn=loss_fn,
-        optimizer=optimizer,
+        optimizer=optimizer_lgfbs,
         error=1e-5,
         train_loader=train_loader,
         val_loader=val_loader,
         device=device
     )
+
+    training_data_matrix = np.array([train_losses, val_losses, val_acc])
+    training_data_rotated = np.zeros((training_data_matrix.shape[1], training_data_matrix.shape[0]))
+    for i in range(training_data_matrix.shape[0]):
+        training_data_rotated[:, i] = training_data_matrix[i, :]
+    training_df = pd.DataFrame(training_data_rotated, columns=["training loss", "validation loss", "testing loss"])
 
 
     test_loss = evaluate_cnn_classifier(
@@ -141,6 +167,8 @@ if __name__ == "__main__":
         test_loader=test_loader,
         device=device
     )
+
+    training_df.to_csv(f"test_loss {test_loss}.csv")
 
     plot_training_and_validation_loss(
         train_losses=train_losses,
