@@ -18,6 +18,10 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
     prev_epoch_loss = float("inf")
     epoch = 1
 
+    if isinstance(optimizer, torch.optim.LBFGS):
+        model.droput_rate = 0.
+    
+
     while True:
         model.train()
         train_epoch_loss = 0
@@ -25,11 +29,12 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         for images, labels in train_loader:
 
             images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
             
             if isinstance(optimizer, torch.optim.LBFGS):
                 optimizer_type = "LBFGS"
                 def closure():
+                    model.train()
+                    optimizer.zero_grad()
                     train_preds = model(images)
                     train_batch_loss = loss_fn(train_preds, labels)
                     train_batch_loss.backward()
@@ -37,6 +42,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
                 train_batch_loss = optimizer.step(closure)
 
             else:
+                optimizer.zero_grad()
                 optimizer_type = "Adam"
                 train_preds = model(images)
                 train_batch_loss = loss_fn(train_preds, labels)
