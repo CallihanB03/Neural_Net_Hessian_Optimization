@@ -168,7 +168,7 @@ if __name__ == "__main__":
         device=device
     )
 
-    training_df.to_csv(f"test_loss {test_loss}.csv")
+    training_df.to_csv(f"training_data/test_loss_{test_loss}.csv")
 
     plot_training_and_validation_loss(
         train_losses=train_losses,
