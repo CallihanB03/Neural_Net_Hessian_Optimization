@@ -18,8 +18,6 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
     prev_epoch_loss = float("inf")
     epoch = 1
 
-    if isinstance(optimizer, torch.optim.LBFGS):
-        model.droput_rate = 0.
     
 
     while True:
@@ -130,6 +128,8 @@ if __name__ == "__main__":
 
 
     # Input Shape 1 x 28 x 28
+
+    # Dropout must be 0 for LBFGS
     cnn_classifier = CNN_classifier(
         input_dim=1,
         hidden_conv_dim1=32,
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         output_dim=10,
         kernel_size=3,
         pool_size=2,
-        dropout_rate=0.2
+        dropout_rate=0
     )
 
 
