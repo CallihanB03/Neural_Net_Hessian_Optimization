@@ -82,6 +82,7 @@ class CNN_classifier(nn.Module):
             out = self.relu(self.conv2(out))
             out = self.max_pool(out)
             out = self.relu(self.conv3(out))
+            out = self.max_pool(out)
             out = self.flatten(out)
             return out.shape[1]
 

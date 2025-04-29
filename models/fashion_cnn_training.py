@@ -142,7 +142,7 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     loss_fn = nn.NLLLoss()
     optimizer_adam = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
-    optimizer_lgfbs = torch.optim.LBFGS(cnn_classifier.parameters(), lr=1.0, max_iter=10, history_size=10)
+    optimizer_lgfbs = torch.optim.LBFGS(cnn_classifier.parameters(), lr=0.01, max_iter=10, history_size=10)
 
 
 
