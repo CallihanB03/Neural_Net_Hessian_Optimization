@@ -87,6 +87,27 @@ class CNN_classifier(nn.Module):
             return out.shape[1]
 
     def forward(self, x):
+        if self.dropout == 0:
+            x = self.relu(self.conv1(x))
+            x = self.max_pool(x)
+
+            
+            x = self.relu(self.conv2(x))
+            x = self.max_pool(x)
+
+            x = self.relu(self.conv3(x))
+            x = self.max_pool(x)
+            x = self.flatten(x)
+
+
+            x = self.relu(self.fc1(x))
+            x = self.relu(self.fc2(x))
+            x = self.relu(self.fc3(x))
+            x = self.logsoftmax(self.fc4(x))
+            
+            return x
+        
+
         x = self.relu(self.conv1(x))
         x = self.max_pool(x)
         x = self.dropout(x)
