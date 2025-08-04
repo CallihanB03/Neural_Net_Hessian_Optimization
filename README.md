@@ -121,6 +121,7 @@ I trained and evaulated a Convolutional Neural Network on the MNIST Fashion Data
 Although the model heavily overfits the training data, the validation accuracies are still quite high and the model finishes with a respectable test accuracy of 90%.
 
 ![Adam Optimizer Performance](figures/CNN%20Validation%20Accuracy%20with%20Adam.png)
+
 CNN Validation Accuracies using Adam Optimizer
 
 
@@ -138,6 +139,7 @@ Another negative of the L-BFGS based optimization training is its instability. L
 
 
 ![L-BFGS Optimizer Val Acc](figures/Collapsed%20Training.png)
+
 CNN experiences collapse while training using L-BFGS based optimizer.
 
 ### Conclusion
