@@ -4,17 +4,6 @@ import math
 
 class RegularizedLBFGS(Optimizer):
     def __init__(self, params, lr=1.0, max_iter=20, tolerance_grad=1e-5, tolerance_change=1e-9, history_size=10, damping=1e-4):
-        if lr <= 0.0:
-            raise ValueError(f"Invalid learning rate: {lr}")
-        if max_iter <= 0:
-            raise ValueError(f"Invalid max_iter: {max_iter}")
-        if tolerance_grad < 0.0:
-            raise ValueError(f"Invalid tolerance_grad: {tolerance_grad}")
-        if tolerance_change < 0.0:
-            raise ValueError(f"Invalid tolerance_change: {tolerance_change}")
-        if history_size <= 0:
-            raise ValueError(f"Invalid history_size: {history_size}")
-
         defaults = dict(lr=lr, 
                         max_iter=max_iter, 
                         tolerance_grad=tolerance_grad,
@@ -24,12 +13,6 @@ class RegularizedLBFGS(Optimizer):
         super(RegularizedLBFGS, self).__init__(params, defaults)
 
     def step(self, closure):
-        """Performs a single optimization step.
-        
-        Args:
-            closure (callable): A closure that reevaluates the model
-                and returns the loss.
-        """
         if closure is None:
             raise RuntimeError("RegularizedLBFGS requires a closure that reevaluates the model.")
 

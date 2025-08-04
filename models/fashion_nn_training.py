@@ -122,7 +122,7 @@ if __name__ == "__main__":
     )
 
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = "mps"
     loss_fn = nn.NLLLoss()
     optimizer = optim.Adam(simple_classifier.parameters(), lr=0.001, weight_decay=0.05)
 

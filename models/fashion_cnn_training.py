@@ -9,18 +9,13 @@ from models.lbfgs_optimizer import RegularizedLBFGS
 import numpy as np
 import pandas as pd
 import random
+import time
 
     
 def set_seed(seed):
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
     random.seed(seed)
-
-    # Ensure deterministic behavior for CUDA
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
 
 
 def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device, max_iter=None):
@@ -29,10 +24,13 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
     val_acc = []
     prev_epoch_loss = float("inf")
     epoch = 1
+    start_time = time.time()
 
     
 
     while True:
+        
+
         model.train()
         train_epoch_loss = 0
 
@@ -96,10 +94,18 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         
 
         if abs(train_epoch_loss - prev_epoch_loss) < error:
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"Elapsed time: {elapsed_time:.4f} seconds")
+
+            
             return model, train_losses, val_losses, val_acc, optimizer_type
         
 
         if max_iter and epoch >= max_iter:
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"Elapsed time: {elapsed_time:.4f} seconds")
             return model, train_losses, val_losses, val_acc, optimizer_type
         
 
@@ -135,8 +141,10 @@ def evaluate_cnn_classifier(model, loss_fn, test_loader, device):
 
 
 if __name__ == "__main__":
+    set_seed(8)
+
+
     # Fashion MNIST Dataset
-    set_seed(42)
     train_data, test_data = load_fashion()
 
     train_loader, val_loader, test_loader = create_fashion_dataloaders(
@@ -165,7 +173,7 @@ if __name__ == "__main__":
     )
 
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = "mps"
     loss_fn = nn.NLLLoss()
     optimizer_adam = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
     optimizer_lgfbs = optim.LBFGS(cnn_classifier.parameters(), lr=0.01, max_iter=10, history_size=10)
@@ -180,7 +188,7 @@ if __name__ == "__main__":
         train_loader=train_loader,
         val_loader=val_loader,
         device=device,
-        max_iter=20
+        max_iter=10
     )
 
     training_data_matrix = np.array([train_losses, val_losses, val_acc])
