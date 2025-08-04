@@ -1,4 +1,4 @@
-# Optimization-Based Neural Network Training with Hessian Methods
+# A Comparison Of Adaptive Moments And Quasi-Newton Optimization For Convolutional Neural Networks
 
 
 ## Motivation
