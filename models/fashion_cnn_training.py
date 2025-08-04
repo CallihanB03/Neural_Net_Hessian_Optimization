@@ -17,6 +17,26 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
+def lbfgs_batch_trainer(model, optimizer, loss_func, images, labels):
+
+    def closure():
+        optimizer.zero_grad()
+        train_preds = model(images)
+        train_batch_loss = loss_func(train_preds, labels)
+        train_batch_loss.backward()
+        return train_batch_loss
+    
+    optimizer.step(closure)
+
+
+def gd_batch_trainer(model, optimizer, loss_func, images, labels):
+    optimizer.zero_grad()
+    train_preds = model(images)
+    train_batch_loss = loss_func(train_preds, labels)
+    train_batch_loss.backward()
+    optimizer.step()
+    return train_batch_loss
+
 
 def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loader, device, max_iter=None):
     train_losses = []
@@ -26,79 +46,56 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
     epoch = 1
     start_time = time.time()
 
-    
+    batch_trainer_dict = {
+        True: [lbfgs_batch_trainer, "LBFGS"],
+        False: [gd_batch_trainer, "Adam"]
+    }
+
+    batch_trainer, optimizer_type = batch_trainer_dict[isinstance(optimizer, optim.LBFGS)]
 
     while True:
-        
-
         model.train()
         train_epoch_loss = 0
-
         for images, labels in train_loader:
-
             images, labels = images.to(device), labels.to(device)
-            
-            if isinstance(optimizer, optim.LBFGS):
-                optimizer_type = "LBFGS"
-                def closure():
-                    model.train()
-                    optimizer.zero_grad()
-                    train_preds = model(images)
-                    train_batch_loss = loss_fn(train_preds, labels)
-                    train_batch_loss.backward()
-                    return train_batch_loss
-                train_batch_loss = optimizer.step(closure)
-                # nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
 
-
-            else:
-                optimizer.zero_grad()
-                optimizer_type = "Adam"
-                train_preds = model(images)
-                train_batch_loss = loss_fn(train_preds, labels)
-                train_batch_loss.backward()
-                optimizer.step()
-
+            train_batch_loss = batch_trainer(model, optimizer, loss_fn, images, labels)
             train_epoch_loss += train_batch_loss.item()
 
-        else:
-            train_epoch_loss = train_batch_loss / len(train_loader)
+        with torch.no_grad():
+            val_epoch_acc = 0
+            val_epoch_loss = 0
+            model.eval()
 
-            with torch.no_grad():
-                val_epoch_acc = 0
-                val_epoch_loss = 0
-                model.eval()
+            for images, labels in val_loader:
+                images, labels = images.to(device), labels.to(device)
+                val_preds = model(images)
 
-                for images, labels in val_loader:
-                    images, labels = images.to(device), labels.to(device)
-                    val_preds = model(images)
+                val_batch_loss = loss_fn(val_preds, labels)
+                val_epoch_loss += val_batch_loss.item()
 
-                    val_batch_loss = loss_fn(val_preds, labels)
-                    val_epoch_loss += val_batch_loss.item()
+                proba = torch.exp(val_preds)
+                _, pred_labels = proba.topk(1, dim=1)
 
-                    proba = torch.exp(val_preds)
-                    _, pred_labels = proba.topk(1, dim=1)
+                result = pred_labels == labels.view(pred_labels.shape)
+                batch_acc = torch.mean(result.type(torch.FloatTensor))
+                val_epoch_acc += batch_acc.item()
 
-                    result = pred_labels == labels.view(pred_labels.shape)
-                    batch_acc = torch.mean(result.type(torch.FloatTensor))
-                    val_epoch_acc += batch_acc.item()
+            else:
+                val_epoch_loss = val_epoch_loss / len(val_loader)
+                val_epoch_acc = val_epoch_acc / len(val_loader)
+                train_losses.append(train_epoch_loss.item())
+                val_losses.append(val_epoch_loss)
+                val_acc.append(val_epoch_acc*100)
 
-                else:
-                    val_epoch_loss = val_epoch_loss / len(val_loader)
-                    val_epoch_acc = val_epoch_acc / len(val_loader)
-                    train_losses.append(train_epoch_loss.item())
-                    val_losses.append(val_epoch_loss)
-                    val_acc.append(val_epoch_acc*100)
+                print(f"Epoch: {epoch} -> train_loss: {train_epoch_loss:.6f}, val_loss = {val_epoch_loss:.6f}, val_acc: {val_epoch_acc*100:.4f}%")
 
-                    print(f"Epoch: {epoch} -> train_loss: {train_epoch_loss:.6f}, val_loss = {val_epoch_loss:.6f}, val_acc: {val_epoch_acc*100:.4f}%")
+        train_epoch_loss = train_epoch_loss / len(train_loader)
         
-
         if abs(train_epoch_loss - prev_epoch_loss) < error:
             end_time = time.time()
             elapsed_time = end_time - start_time
             print(f"Elapsed time: {elapsed_time:.4f} seconds")
-
-            
             return model, train_losses, val_losses, val_acc, optimizer_type
         
 
@@ -183,7 +180,7 @@ if __name__ == "__main__":
     cnn_classifier, train_losses, val_losses, val_acc, optimizer_type = train_cnn_classifier(
         model=cnn_classifier,
         loss_fn=loss_fn,
-        optimizer=optimizer_lgfbs,
+        optimizer=optimizer_adam,
         error=1e-5,
         train_loader=train_loader,
         val_loader=val_loader,
