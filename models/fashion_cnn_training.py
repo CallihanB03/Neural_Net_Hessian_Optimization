@@ -5,7 +5,7 @@ from utils.load_data import load_fashion
 from utils.data_preprocessing import create_fashion_dataloaders
 from utils.create_plots import plot_training_and_validation_loss
 from models.fashion_networks import CNN_classifier
-from models.lbfgs_optimizer import RegularizedLBFGS
+from models.lbfgs_optimizer import LBFGS_based_opimizer
 import numpy as np
 import pandas as pd
 import random
@@ -24,9 +24,11 @@ def lbfgs_batch_trainer(model, optimizer, loss_func, images, labels):
         train_preds = model(images)
         train_batch_loss = loss_func(train_preds, labels)
         train_batch_loss.backward()
+        optimizer.batch_loss = train_batch_loss
         return train_batch_loss
-    
+
     optimizer.step(closure)
+    return optimizer.batch_loss
 
 
 def gd_batch_trainer(model, optimizer, loss_func, images, labels):
@@ -97,7 +99,7 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
         if abs(train_epoch_loss - prev_epoch_loss) < error:
             end_time = time.time()
             elapsed_time = end_time - start_time
-            
+
             minutes, seconds = divmod(elapsed_time, 60)
             print(f"Elapsed time: {minutes}:{seconds}")
             return model, train_losses, val_losses, val_acc, optimizer_type
@@ -188,7 +190,7 @@ if __name__ == "__main__":
     cnn_classifier, train_losses, val_losses, val_acc, optimizer_type = train_cnn_classifier(
         model=cnn_classifier,
         loss_fn=loss_fn,
-        optimizer=optimizer_adam,
+        optimizer=optimizer_lgfbs,
         error=1e-5,
         train_loader=train_loader,
         val_loader=val_loader,
