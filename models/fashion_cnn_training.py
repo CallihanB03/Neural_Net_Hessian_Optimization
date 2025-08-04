@@ -62,6 +62,8 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
             train_batch_loss = batch_trainer(model, optimizer, loss_fn, images, labels)
             train_epoch_loss += train_batch_loss.item()
 
+        train_epoch_loss = train_epoch_loss / len(train_loader)
+
         with torch.no_grad():
             val_epoch_acc = 0
             val_epoch_loss = 0
@@ -84,25 +86,29 @@ def train_cnn_classifier(model, loss_fn, optimizer, error, train_loader, val_loa
             else:
                 val_epoch_loss = val_epoch_loss / len(val_loader)
                 val_epoch_acc = val_epoch_acc / len(val_loader)
-                train_losses.append(train_epoch_loss.item())
+                train_losses.append(train_epoch_loss)
                 val_losses.append(val_epoch_loss)
                 val_acc.append(val_epoch_acc*100)
 
                 print(f"Epoch: {epoch} -> train_loss: {train_epoch_loss:.6f}, val_loss = {val_epoch_loss:.6f}, val_acc: {val_epoch_acc*100:.4f}%")
 
-        train_epoch_loss = train_epoch_loss / len(train_loader)
+        
         
         if abs(train_epoch_loss - prev_epoch_loss) < error:
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Elapsed time: {elapsed_time:.4f} seconds")
+            
+            minutes, seconds = divmod(elapsed_time, 60)
+            print(f"Elapsed time: {minutes}:{seconds}")
             return model, train_losses, val_losses, val_acc, optimizer_type
         
 
         if max_iter and epoch >= max_iter:
             end_time = time.time()
             elapsed_time = end_time - start_time
-            print(f"Elapsed time: {elapsed_time:.4f} seconds")
+
+            minutes, seconds = divmod(elapsed_time, 60)
+            print(f"Elapsed time: {minutes}:{seconds}")
             return model, train_losses, val_losses, val_acc, optimizer_type
         
 
@@ -139,6 +145,7 @@ def evaluate_cnn_classifier(model, loss_fn, test_loader, device):
 
 if __name__ == "__main__":
     set_seed(8)
+    device = "mps"
 
 
     # Fashion MNIST Dataset
@@ -168,9 +175,10 @@ if __name__ == "__main__":
         pool_size=2,
         dropout_rate=0
     )
+    cnn_classifier.to(device)
 
 
-    device = "mps"
+    
     loss_fn = nn.NLLLoss()
     optimizer_adam = optim.Adam(cnn_classifier.parameters(), lr=0.001, weight_decay=0.0025)
     optimizer_lgfbs = optim.LBFGS(cnn_classifier.parameters(), lr=0.01, max_iter=10, history_size=10)
